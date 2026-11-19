@@ -79,3 +79,14 @@ summary { cursor: pointer; color: #6b5a48; }
   .scaler { transform: scale(1.0) !important; transform-origin: top left; }
   .editable, .editable:hover, .editable:focus { outline: none !important; background: transparent !important; }
 }
+
+/* ── 아이 사진 넣기 ── */
+.label-like { margin-bottom: 14px; }
+.label-like > span { display: block; font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.label-like em { font-style: normal; font-weight: 400; color: #8a7a68; font-size: 13px; }
+.picker { display: flex; align-items: center; gap: 14px; background: #fff; border: 1.5px solid #e2d4b8; border-radius: 12px; padding: 10px 12px; }
+.picker.compact { background: transparent; border: 0; padding: 0; gap: 8px; }
+.picker-thumb { flex: none; width: 72px; height: 72px; border-radius: 50%; background: #eee center 30% / cover no-repeat; border: 3px solid var(--yellow); }
+.picker-btns { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.picker-btns small { width: 100%; color: #8a7a68; font-size: 13px; }
+.picker-btns .picker-msg { color: #b0602a; }

@@ -4,7 +4,54 @@ import { useEffect, useRef, useState } from 'react';
 
 const DATE_TEXT = '2026년 11월 19일';
 const KEY = 'dad-pledge-cert-v1';
-const EMPTY = { center: '', child: '', pledge: '', dad: '', body: '' };
+const EMPTY = { center: '', child: '', pledge: '', dad: '', body: '', photo: '' };
+
+// 올린 사진을 긴 쪽 700px 정도로 줄여 jpg 글자로 바꿔 둔다 (저장·기억이 가볍게)
+function shrinkPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 700;
+      const r = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * r);
+      c.height = Math.round(img.height * r);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+    img.src = url;
+  });
+}
+
+function PhotoPicker({ photo, onPick, onReset, compact }) {
+  const ref = useRef(null);
+  const [msg, setMsg] = useState('');
+  async function change(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    setMsg('사진을 넣는 중…');
+    try { onPick(await shrinkPhoto(f)); setMsg(''); }
+    catch { setMsg('이 사진은 열 수 없어요. 다른 사진을 골라 주세요.'); }
+  }
+  return (
+    <div className={compact ? 'picker compact' : 'picker'}>
+      {!compact && <div className="picker-thumb" style={{ backgroundImage: `url(${photo || '/photo.jpg'})` }} />}
+      <div className="picker-btns">
+        <button type="button" className="ghost" onClick={() => ref.current && ref.current.click()}>
+          📷 {photo ? '사진 바꾸기' : '아이 사진 넣기'}
+        </button>
+        {photo && <button type="button" className="ghost" onClick={onReset}>↩ 기본 사진으로</button>}
+        {!compact && <small>{photo ? '넣은 사진이 수료증에 들어가요' : '안 넣으면 기본 사진이 들어가요'}</small>}
+        {msg && <small className="picker-msg">{msg}</small>}
+      </div>
+      <input ref={ref} type="file" accept="image/*" hidden onChange={change} />
+    </div>
+  );
+}
 const DEFAULT_BODY =
   '위 아빠는 아빠교육 「좋은 아빠보다, 필요한 아빠」를 끝까지 함께하며 아이에게 꼭 필요한 아빠가 되기로 다짐하였기에 이 수료증을 드립니다.';
 
@@ -50,7 +97,7 @@ function Certificate({ d, set }) {
         <div className="sub">좋은 아빠보다, 필요한 아빠</div>
 
         <div className="photo-ring">
-          <div className="photo-img" />
+          <div className="photo-img" style={{ backgroundImage: `url(${d.photo || '/photo.jpg'})`, backgroundPosition: d.photo ? '50% 35%' : '50% 18%' }} />
         </div>
 
         <div className="who">
@@ -193,8 +240,12 @@ export default function Page() {
             <span>③ 아빠 이름</span>
             <input value={d.dad} onChange={(e) => set({ dad: e.target.value })} placeholder="홍길동" />
           </label>
+          <div className="label-like">
+            <span>④ 아이 사진 <em>(선택)</em></span>
+            <PhotoPicker photo={d.photo} onPick={(v) => set({ photo: v })} onReset={() => set({ photo: '' })} />
+          </div>
           <label>
-            <span>④ 어린이집 이름 <em>(수료증 아래에 들어가요)</em></span>
+            <span>⑤ 어린이집 이름 <em>(수료증 아래에 들어가요)</em></span>
             <input value={d.center} onChange={(e) => set({ center: e.target.value })} placeholder="햇살어린이집" />
           </label>
 
@@ -212,6 +263,7 @@ export default function Page() {
         <>
           <div className="toolbar app-ui">
             <button className="ghost" onClick={() => setStep('form')}>← 다시 쓰기</button>
+            <PhotoPicker compact photo={d.photo} onPick={(v) => set({ photo: v })} onReset={() => set({ photo: '' })} />
             <p className="edit-tip">✏️ 수료증의 글을 누르면 바로 고칠 수 있어요</p>
           </div>
 
